@@ -35,6 +35,14 @@ conjugateLinearModel <- function(Y, X, Theta, Gamma, Xi, upsilon, n_samples = 20
     .Call('_fido_conjugateLinearModel', PACKAGE = 'fido', Y, X, Theta, Gamma, Xi, upsilon, n_samples)
 }
 
+optimLabraduckCollapsed <- function(Y, upsilon, Xi, F, G, W, M0, C0, observations, init, gamma_scale = 0, W_scale = 0, n_samples = 2000L, calcGradHess = TRUE, b1 = 0.9, b2 = 0.99, step_size = 0.003, epsilon = 10e-7, eps_f = 1e-10, eps_g = 1e-4, max_iter = 10000L, verbose = FALSE, verbose_rate = 10L, decomp_method = "cholesky", optim_method = "adam", eigvalthresh = 0, jitter = 0, multDirichletBoot = -1.0, useSylv = TRUE, ncores = -1L) {
+    .Call('_fido_optimLabraduckCollapsed', PACKAGE = 'fido', Y, upsilon, Xi, F, G, W, M0, C0, observations, init, gamma_scale, W_scale, n_samples, calcGradHess, b1, b2, step_size, epsilon, eps_f, eps_g, max_iter, verbose, verbose_rate, decomp_method, optim_method, eigvalthresh, jitter, multDirichletBoot, useSylv, ncores)
+}
+
+uncollapseLabraduck <- function(eta, F, G, W, gamma_scale, W_scale, upsilon, Xi, M0, C0, observations, seed, ret_mean = FALSE, apply_smoother = FALSE, ncores = -1L) {
+    .Call('_fido_uncollapseLabraduck', PACKAGE = 'fido', eta, F, G, W, gamma_scale, W_scale, upsilon, Xi, M0, C0, observations, seed, ret_mean, apply_smoother, ncores)
+}
+
 #' Calculations for the Collapsed Maltipoo Model
 #'
 #' Functions providing access to the Log Likelihood, Gradient, and Hessian
@@ -213,13 +221,13 @@ loglikPibbleCollapsed <- function(Y, upsilon, ThetaX, KInv, AInv, eta, sylv = FA
     .Call('_fido_loglikPibbleCollapsed', PACKAGE = 'fido', Y, upsilon, ThetaX, KInv, AInv, eta, sylv)
 }
 
-#' @rdname loglikPibbleCollapsed
+#' @rdname gradPibbleCollapsed
 #' @export
 gradPibbleCollapsed <- function(Y, upsilon, ThetaX, KInv, AInv, eta, sylv = FALSE) {
     .Call('_fido_gradPibbleCollapsed', PACKAGE = 'fido', Y, upsilon, ThetaX, KInv, AInv, eta, sylv)
 }
 
-#' @rdname loglikPibbleCollapsed
+#' @rdname hessPibbleCollapsed
 #' @export
 hessPibbleCollapsed <- function(Y, upsilon, ThetaX, KInv, AInv, eta, sylv = FALSE) {
     .Call('_fido_hessPibbleCollapsed', PACKAGE = 'fido', Y, upsilon, ThetaX, KInv, AInv, eta, sylv)
@@ -430,6 +438,18 @@ lmvgamma <- function(a, p) {
 #' @references https://en.wikipedia.org/wiki/Multivariate_gamma_function
 lmvgamma_deriv <- function(a, p) {
     .Call('_fido_lmvgamma_deriv', PACKAGE = 'fido', a, p)
+}
+
+power_G <- function(G, it_begin, it_end) {
+    .Call('_fido_power_G', PACKAGE = 'fido', G, it_begin, it_end)
+}
+
+dlm_B <- function(F, G, M0, observations) {
+    .Call('_fido_dlm_B', PACKAGE = 'fido', F, G, M0, observations)
+}
+
+dlm_U <- function(F, G, W, C0, observations) {
+    .Call('_fido_dlm_U', PACKAGE = 'fido', F, G, W, C0, observations)
 }
 
 eigen_lap_test <- function(n_samples, m, S, eigvalthresh) {

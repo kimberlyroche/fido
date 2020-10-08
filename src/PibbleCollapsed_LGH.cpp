@@ -82,7 +82,7 @@ double loglikPibbleCollapsed(const Eigen::ArrayXXd Y,
 }
 
 
-//' @rdname loglikPibbleCollapsed
+//' @rdname gradPibbleCollapsed
 //' @export
 // [[Rcpp::export]]
 Eigen::VectorXd gradPibbleCollapsed(const Eigen::ArrayXXd Y,
@@ -100,7 +100,7 @@ Eigen::VectorXd gradPibbleCollapsed(const Eigen::ArrayXXd Y,
   return cm.calcGrad();
 }
 
-//' @rdname loglikPibbleCollapsed
+//' @rdname hessPibbleCollapsed
 //' @export
 // [[Rcpp::export]]
 Eigen::MatrixXd hessPibbleCollapsed(const Eigen::ArrayXXd Y,

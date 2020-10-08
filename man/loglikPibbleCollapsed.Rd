@@ -2,15 +2,9 @@
 % Please edit documentation in R/RcppExports.R
 \name{loglikPibbleCollapsed}
 \alias{loglikPibbleCollapsed}
-\alias{gradPibbleCollapsed}
-\alias{hessPibbleCollapsed}
 \title{Calculations for the Collapsed Pibble Model}
 \usage{
 loglikPibbleCollapsed(Y, upsilon, ThetaX, KInv, AInv, eta, sylv = FALSE)
-
-gradPibbleCollapsed(Y, upsilon, ThetaX, KInv, AInv, eta, sylv = FALSE)
-
-hessPibbleCollapsed(Y, upsilon, ThetaX, KInv, AInv, eta, sylv = FALSE)
 }
 \arguments{
 \item{Y}{D x N matrix of counts}
