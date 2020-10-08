@@ -61,7 +61,8 @@ class TimeSeriesFit
     }
     ~TimeSeriesFit(){}        
     
-    // assuming time-invariant F, G, W, and gamma
+    // assuming time-varing F
+    // assuming time-invariant G, W, and gamma
     // need to adapt for time varying parameters (TODO)
     void apply_Kalman_filter(MatrixXd eta) {
       this->eta = eta;
@@ -76,7 +77,9 @@ class TimeSeriesFit
       // init the objects we'll iteratively overwrite where they've got an initial value
       int upsilon_t = upsilon;
       MatrixXd Gt = G.transpose();
-      MatrixXd Ft = F.transpose();
+      // MatrixXd Ft = F.transpose();
+      MatrixXd Ft;
+      MatrixXd Ft_t;
       MatrixXd Xi_t = Xi;
       MatrixXd M_t = M0;
       MatrixXd C_t = C0*W_scale;
@@ -95,6 +98,8 @@ class TimeSeriesFit
       int curr_obs_idx = -1;
       bool found;
       for(int t=1; t<=T; t++) {
+        Ft = F.col(t-1);
+        Ft_t = Ft.transpose();
         // find the index of this time point in the observation vector (if it exists)
         // this will skip all but the first observation on a given date
         found = false;
@@ -112,11 +117,11 @@ class TimeSeriesFit
           C_t = R_t;
         } else {
           // one-step ahead observation forecast
-          ft_t = Ft*A_t;
-          q_t = gamma_scale + (Ft*R_t*F)(0,0);
+          ft_t = Ft_t*A_t;
+          q_t = gamma_scale + (Ft_t*R_t*Ft)(0,0);
           // system posterior at t
           et_t = eta.row(curr_obs_idx) - ft_t;
-          S_t = R_t*F/q_t;
+          S_t = R_t*Ft/q_t;
           M_t = A_t + S_t*et_t;
           C_t = R_t - q_t*S_t*(S_t.transpose());
           upsilon_t += 1;
@@ -161,7 +166,8 @@ class TimeSeriesFit
       return(sample);
     }
 
-    // assuming time-invariant F, G, W, and gamma
+    // assuming time-varying F
+    // assuming time-invariant G, W, and gamma
     // need to adapt for time varying parameters (TODO)
     void apply_simulation_smoother() {
       if(filtered) {
@@ -191,10 +197,15 @@ class TimeSeriesFit
         //     Ms_star(i+(j*system_dim),T-1) = smoothed_Theta_t(i,j); // no update yet
         //   }
         // }
-        MatrixXd Z(F.cols(), F.rows());
+        // MatrixXd Z(F.cols(), F.rows());
+        MatrixXd Z(1, F.rows());
         fillUnitNormal(Z);
-        MatrixXd eta_t = (F.transpose())*smoothed_Theta_t + Z*(LV.transpose());
+        MatrixXd Ft = F.col(T-1);
+        MatrixXd Ft_t = Ft.transpose();
+        MatrixXd eta_t = (Ft_t)*smoothed_Theta_t + Z*(LV.transpose());
         etas.col(T-1) = eta_t;
+        // MatrixXd eta_t = (F.transpose())*smoothed_Theta_t + Z*(LV.transpose());
+        // etas.col(T-1) = eta_t;
         MatrixXd R_t(system_dim, system_dim);
         MatrixXd R_t_inv(system_dim, system_dim);
         MatrixXd Z_t(system_dim, system_dim);
@@ -203,6 +214,8 @@ class TimeSeriesFit
         MatrixXd C_t_star(system_dim, system_dim);
         for(int t=T-1; t>0; t--) {
           // note to self: 1-indexed loop to 0-indexed data structure
+          Ft = F.col(t-1);
+          Ft_t = Ft.transpose();
           R_t = unpack_sample(Rs, system_dim, system_dim, t); // R_t+1
           R_t_inv = R_t.inverse();
           M_t = unpack_sample(Ms, system_dim, D-1, t-1);
@@ -228,7 +241,7 @@ class TimeSeriesFit
           //   }
           // }
           fillUnitNormal(Z);
-          eta_t = (F.transpose())*smoothed_Theta_t + Z*(LV.transpose())*sqrt(gamma_scale);
+          eta_t = (Ft_t)*smoothed_Theta_t + Z*(LV.transpose())*sqrt(gamma_scale);
           etas.col(t-1) = eta_t;
         }
         smoothed = true;

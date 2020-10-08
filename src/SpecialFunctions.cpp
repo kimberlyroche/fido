@@ -79,25 +79,33 @@ Eigen::MatrixXd dlm_B(Eigen::MatrixXd F, Eigen::MatrixXd G, Eigen::MatrixXd M0, 
   int T = observations.maxCoeff();
   MatrixXd B(D-1, N);
   MatrixXd alpha(1, D);
-  MatrixXd Ft = F.transpose();
+  // MatrixXd Ft = F.transpose();
+  MatrixXd Ft;
+  MatrixXd Ft_t;
   int t;
   for(int t_incr=0; t_incr<observations.size(); t_incr++) {
+    // slice from F
+    Ft = F.col(t_incr);
+    Ft_t = Ft.transpose();
     // column-wise
     t = observations(t_incr);
-    alpha = Ft*power_G(G, t, 1)*M0;
+    alpha = Ft_t*power_G(G, t, 1)*M0;
     B.block(0,t_incr,D-1,1) = alpha;
   }
   return(B);
 }
 
-// build U matrix (unscaled covariance over samples) assuming time-invariant parameters F, G, W
+// build U matrix (unscaled covariance over samples) assuming time-varying F and time-invariant parameters G, W
 // [[Rcpp::export]]
 Eigen::MatrixXd dlm_U(Eigen::VectorXd F, Eigen::MatrixXd G, Eigen::MatrixXd W, Eigen::MatrixXd C0, Eigen::VectorXd observations) {
   // check T >= 1
   int N = observations.size();
   int T = observations.maxCoeff();
   MatrixXd res = MatrixXd::Zero(N,N);
-  MatrixXd Ft = F.transpose();
+  // MatrixXd Ft = F.transpose();
+  MatrixXd Ft;
+  MatrixXd Ftk;
+  MatrixXd Ft_t;
   MatrixXd Gt = G.transpose();
   int system_dim = G.rows();
   int t;
@@ -105,14 +113,18 @@ Eigen::MatrixXd dlm_U(Eigen::VectorXd F, Eigen::MatrixXd G, Eigen::MatrixXd W, E
   for(int t1_incr=0; t1_incr<observations.size(); t1_incr++) { // cov rows
     for(int t2_incr=0; t2_incr<observations.size(); t2_incr++) { // cov cols
       // check this observation exists, else skip this row/col in covariance matrix
+      // slice from F
+      Ft = F.col(t1_incr);
+      Ft_t = Ft.transpose();
+      Ftk = F.col(t2_incr);
       if(t1_incr == t2_incr) {
         t = observations(t1_incr);
         // diagonal
-        res(t1_incr, t1_incr) += (Ft*W*F)(0,0); // 1x1 vector product
+        res(t1_incr, t1_incr) += (Ft_t*W*Ft)(0,0); // 1x1 vector product
         for(int ell=t; ell>=2; ell--) {
-          res(t1_incr, t1_incr) += (Ft*power_G(G, t, ell)*W*power_G(Gt, ell, t)*F)(0,0); // 1x1 vector
+          res(t1_incr, t1_incr) += (Ft_t*power_G(G, t, ell)*W*power_G(Gt, ell, t)*Ft)(0,0); // 1x1 vector
         }
-        res(t1_incr, t1_incr) += (Ft*power_G(G, t, 1)*C0*power_G(Gt, 1, t)*F)(0,0); // 1x1 vector
+        res(t1_incr, t1_incr) += (Ft_t*power_G(G, t, 1)*C0*power_G(Gt, 1, t)*Ft)(0,0); // 1x1 vector
       } else {
         // off-diagonal
         if(t1_incr > t2_incr) {
@@ -121,13 +133,13 @@ Eigen::MatrixXd dlm_U(Eigen::VectorXd F, Eigen::MatrixXd G, Eigen::MatrixXd W, E
         } else {
           t = observations(t2_incr); // col
           tk = observations(t1_incr); // row
-          res(t1_incr, t2_incr) += (Ft*power_G(G, t, tk+1)*W*F)(0,0);
+          res(t1_incr, t2_incr) += (Ft_t*power_G(G, t, tk+1)*W*Ftk)(0,0);
           MatrixXd temp = MatrixXd::Zero(system_dim, system_dim);
           for(int ell=tk; ell>=2; ell--) {
             temp += power_G(G, t, ell)*W*power_G(Gt, ell, tk);
           }
-          res(t1_incr, t2_incr) += (Ft*temp*F)(0,0);
-          res(t1_incr, t2_incr) += (Ft*power_G(G, t, 1)*C0*power_G(Gt, 1, tk)*F)(0,0);
+          res(t1_incr, t2_incr) += (Ft_t*temp*Ftk)(0,0);
+          res(t1_incr, t2_incr) += (Ft_t*power_G(G, t, 1)*C0*power_G(Gt, 1, tk)*Ftk)(0,0);
         }
       }
     }

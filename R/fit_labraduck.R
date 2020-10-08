@@ -154,16 +154,17 @@ labraduck <- function(Y=NULL, upsilon=NULL, Xi=NULL, F, G, W, M0, C0, observatio
   cat("Loglik:",fitc$LogLik,"\n")
 
   # ret_mean overrides sample returning for now
-  fitu <- uncollapseLabraduck(fitc$Samples, F, G, W, gamma_scale, W_scale, upsilon, Xi, M0, C0, observations, seed=seed, ret_mean=ret_mean, apply_smoother=apply_smoother, ncores=ncores)
+  fitu <- uncollapseLabraduck(fitc$Samples, F, G, W, gamma_scale, W_scale, upsilon, Xi, M0, C0, observations, seed=seed,
+                              ret_mean=ret_mean, apply_smoother=apply_smoother, ncores=ncores)
 
   timeru <- parse_timer_seconds(fitu$Timer)
-  
+
   timer <- c(timerc, timeru)
   timer <- timer[which(names(timer)!="Overall")]
-  timer <- c(timer, 
-             "Overall" = unname(timerc["Overall"]) +  unname(timeru["Overall"]), 
+  timer <- c(timer,
+             "Overall" = unname(timerc["Overall"]) +  unname(timeru["Overall"]),
              "Uncollapse_Overall" = timeru["Overall"])
-  
+
   # Marginal Likelihood Computation -- check this (TODO)
   # d <- D^2 + N*D + D*Q
   # logMarginalLikelihood <- fitc$LogLik+d/2*log(2*pi)+.5*fitc$logInvNegHessDet-d/2*log(N)

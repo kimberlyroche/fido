@@ -58,7 +58,6 @@ List uncollapseLabraduck(const Eigen::Map<Eigen::MatrixXd> eta, // note this is 
   //iterate over all draws of eta - embarrassingly parallel with parallel rng
   #ifdef FIDO_USE_PARALLEL
     Eigen::setNbThreads(1);
-    //Rcout << "thread: "<< omp_get_max_threads() << std::endl;
   #endif 
   #pragma omp parallel shared(D, N, SigmaDraw0, ThetaFilteredDraw0, ThetaSmoothedDraw0, MStarDraw0, EtaDraw0)
   {

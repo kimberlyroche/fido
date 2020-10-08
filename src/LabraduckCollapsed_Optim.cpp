@@ -10,41 +10,6 @@ using Eigen::MatrixXd;
 using Eigen::ArrayXXd;
 using Eigen::VectorXd;
 
-// // [[Rcpp::export]]
-// List optimLabraduckCollapsed(const Eigen::ArrayXXd Y, 
-//                const double upsilon, 
-//                const Eigen::MatrixXd Xi,
-//                const Eigen::MatrixXd F,
-//                const Eigen::MatrixXd G,
-//                const Eigen::MatrixXd W,
-//                const Eigen::MatrixXd M0,
-//                const Eigen::MatrixXd C0,
-//                const Eigen::VectorXd observations, 
-//                Eigen::MatrixXd init,
-//                double gamma_scale=0,
-//                double W_scale=0,
-//                int n_samples=2000, 
-//                bool calcGradHess = true,
-//                double b1 = 0.9,         
-//                double b2 = 0.99,        
-//                double step_size = 0.003, // was called eta in ADAM code
-//                double epsilon = 10e-7, 
-//                double eps_f=1e-10,       
-//                double eps_g=1e-4,       
-//                int max_iter=10000,      
-//                bool verbose=false,      
-//                int verbose_rate=10,
-//                String decomp_method="cholesky",
-//                String optim_method="adam",
-//                double eigvalthresh=0, 
-//                double jitter=0,
-//                double multDirichletBoot = -1.0, 
-//                bool useSylv = true, 
-//                int ncores=-1) {
-//   List out(10);
-//   return out;
-// }
-
 // [[Rcpp::export]]
 List optimLabraduckCollapsed(const Eigen::ArrayXXd Y, 
                const double upsilon, 
@@ -140,11 +105,13 @@ List optimLabraduckCollapsed(const Eigen::ArrayXXd Y,
   Map<MatrixXd> etamat(eta.data(), D-1, N);
   Map<VectorXd> scale_estimates(pars.tail(scale_init.size()).data(), scale_init.size());
 
-  Rcout << "Optimized log(gamma_scale)=" << scale_estimates(0) << std::endl;
-  Rcout << "              gamma_scale=" << exp(scale_estimates(0)) << std::endl;
-  Rcout << "Optimized log(W_scale)=" << scale_estimates(1) << std::endl;
-  Rcout << "               W_scale=" << exp(scale_estimates(1)) << std::endl;
-
+  if(verbose) {
+    Rcout << "Optimized log(gamma_scale)=" << scale_estimates(0) << std::endl;
+    Rcout << "              gamma_scale=" << exp(scale_estimates(0)) << std::endl;
+    Rcout << "Optimized log(W_scale)=" << scale_estimates(1) << std::endl;
+    Rcout << "               W_scale=" << exp(scale_estimates(1)) << std::endl;
+  }
+  
   out[0] = -nllopt; // Return (positive) LogLik
   out[3] = etamat;
   out[5] = exp(scale_estimates(0));
